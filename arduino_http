@@ -1,0 +1,39 @@
+
+//-----------------------------------------------------------------------------------
+#include <Arduino.h>
+#include <ESP8266WiFi.h>
+#include <ESP8266WiFiMulti.h>
+#include <ESP8266HTTPClient.h>
+#include <WiFiClient.h>
+ESP8266WiFiMulti WiFiMulti;
+//-----------------------------------------------------------------------------------
+void setup() 
+{
+  Serial.begin(9600);Serial.println();Serial.println();
+  WiFi.mode(WIFI_STA); // 8266两种模式:  STA=接入热点   AP=创造热点
+  WiFiMulti.addAP("zhangjun", "45853694");  // 把要接入的热点存入 WiFiMulti 清单
+}
+//-----------------------------------------------------------------------------------
+void loop() {
+  if ((WiFiMulti.run() == WL_CONNECTED))    // 如果wifi连接成功
+  {
+    WiFiClient client;  HTTPClient http;    //创建  tcp对象  http对象
+    Serial.print("wifi connected.  will send http... \n");
+    if (http.begin(client, "http://hq.sinajs.cn/list=sh512000")) 
+    {
+      Serial.print("[HTTP] has been sent \n");
+      int httpCode = http.GET();                // 服务器发出的状态码, 200说明成功了
+      if (httpCode > 0) 
+      {
+        Serial.printf("[HTTP] GET  code: %d\n", httpCode);
+        if (httpCode == HTTP_CODE_OK || httpCode == HTTP_CODE_MOVED_PERMANENTLY) 
+        { String payload = http.getString();   Serial.println(payload); }    // 接收成功,打印收到的字符串
+      } 
+      else {Serial.printf("[HTTP]GET...failed, error: %s\n", http.errorToString(httpCode).c_str());}
+      http.end();
+    } 
+    else {  Serial.printf("[HTTP} Unable to connect\n");  }
+  }
+  delay(5000);
+}
+//-----------------------------------------------------------------------------------
